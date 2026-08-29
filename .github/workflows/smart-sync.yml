@@ -149,7 +149,7 @@ jobs:
           # Step 1: Check if in Project
           PROJECT_ITEM=$(gh api graphql -f query='
             query {
-              repository(owner: "alirezarezvani", name: "claude-skills") {
+              repository(owner: "${{ github.repository_owner }}", name: "${{ github.event.repository.name }}") {
                 issue(number: ${{ github.event.issue.number }}) {
                   projectItems(first: 10) {
                     nodes {
@@ -160,16 +160,16 @@ jobs:
                 }
               }
             }
-          ' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number == 9) | .id')
+          ' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number == ${{ vars.PROJECT_NUMBER || '9' }}) | .id')
 
           if [ -z "$PROJECT_ITEM" ]; then
             echo "Adding to project..."
-            gh project item-add 9 --owner alirezarezvani --url ${{ github.event.issue.html_url }}
+            gh project item-add ${{ vars.PROJECT_NUMBER || '9' }} --owner ${{ github.repository_owner }} --url ${{ github.event.issue.html_url }}
             sleep 2
 
             PROJECT_ITEM=$(gh api graphql -f query='
               query {
-                repository(owner: "alirezarezvani", name: "claude-skills") {
+                repository(owner: "${{ github.repository_owner }}", name: "${{ github.event.repository.name }}") {
                   issue(number: ${{ github.event.issue.number }}) {
                     projectItems(first: 10) {
                       nodes {
@@ -180,7 +180,7 @@ jobs:
                   }
                 }
               }
-            ' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number == 9) | .id')
+            ' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number == ${{ vars.PROJECT_NUMBER || '9' }}) | .id')
           fi
 
           echo "Project Item ID: $PROJECT_ITEM"
@@ -213,8 +213,8 @@ jobs:
           # Step 3: Get Project IDs
           PROJECT_DATA=$(gh api graphql -f query='
             query {
-              user(login: "alirezarezvani") {
-                projectV2(number: 9) {
+              user(login: "${{ github.repository_owner }}") {
+                projectV2(number: ${{ vars.PROJECT_NUMBER || '9' }}) {
                   id
                   fields(first: 20) {
                     nodes {
